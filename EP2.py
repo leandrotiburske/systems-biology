@@ -40,37 +40,8 @@ def calc_prob(line, state, after, alpha, beta, gene):
             calc = 1 - (1 / (1 + math.e ** (- alpha)))
 
     return calc
-
-filename = input("arquivo: ")
-file = open(filename, "r")
-file = file.read().splitlines()
-
-alpha = float(file[0])
-beta = float(file[1])
-file = file[2:]
-file = pd.read_csv(filename, skiprows=[0,1])
-
-print("Conditional Probability Tables")
-
-for gene in range(len(list(file))):
-    row = file.loc[[gene]]
-    name = list(file)[gene]
-    regulators = reg(line = row, gene = name)
-    tt = truthtable(len(regulators))
-    tt = pd.DataFrame(tt, columns=regulators)
-    for i in range(len(regulators)):
-        regulators[i] = regulators[i] + "(t)"
-    tt2 = truthtable(len(regulators))
-    tt2 = pd.DataFrame(tt2, columns=regulators)
-    column_name = "Prob" + name + "(t+1)=0"
-    result0 = tt.apply(lambda x : calc_prob(line = row, state = x, after = 0, alpha = alpha, beta = beta, gene = name), axis=1)
-    tt2[column_name] = result0.round(2)
-    column_name = "Prob" + name + "(t+1)=1"
-    result1 = tt.apply(lambda x : calc_prob(line = row, state = x, after = 1, alpha = alpha, beta = beta, gene = name), axis=1)
-    tt2[column_name] = result1.round(2)
-    print(tt2.to_string(index=False))
-
-def calc_prob2(state, after, alpha, beta, gene, Hi):
+  
+ def calc_prob2(state, after, alpha, beta, gene, Hi):
     if Hi != 0:
         if after == 1:
             calc = math.e ** (beta * Hi) / (math.e ** (beta * Hi) + math.e ** (- beta * Hi) )
@@ -101,15 +72,10 @@ def calc_prob_state(states, state, matrix):
         probabilities.append(prob)
     return probabilities
 
-
 def transitions(states, matrix):
     table = pd.DataFrame([calc_prob_state(state = states[x], states = states, matrix = matrix) for x in range(len(states))])
     return table
-
-# Create conditional table
-trans_table = transitions(states = truthtable(len(list(file))), matrix = file)
-
-random.seed(0)
+  
 def markov_walk(trans_table):
     state = random.choice(range(len(trans_table)))
     state_list = []
@@ -131,6 +97,41 @@ def markov_walk(trans_table):
     for k, v in frequency.items():
         freq.append(frequency[k])
     return freq
+  
+filename = input("arquivo: ")
+file = open(filename, "r")
+file = file.read().splitlines()
+
+alpha = float(file[0])
+beta = float(file[1])
+file = file[2:]
+file = pd.read_csv(filename, skiprows=[0,1])
+
+print("Conditional Probability Tables")
+
+for gene in range(len(list(file))):
+    row = file.loc[[gene]]
+    name = list(file)[gene]
+    regulators = reg(line = row, gene = name)
+    tt = truthtable(len(regulators))
+    tt = pd.DataFrame(tt, columns=regulators)
+    for i in range(len(regulators)):
+        regulators[i] = regulators[i] + "(t)"
+    tt2 = truthtable(len(regulators))
+    tt2 = pd.DataFrame(tt2, columns=regulators)
+    column_name = "Prob" + name + "(t+1)=0"
+    result0 = tt.apply(lambda x : calc_prob(line = row, state = x, after = 0, alpha = alpha, beta = beta, gene = name), axis=1)
+    tt2[column_name] = result0.round(2)
+    column_name = "Prob" + name + "(t+1)=1"
+    result1 = tt.apply(lambda x : calc_prob(line = row, state = x, after = 1, alpha = alpha, beta = beta, gene = name), axis=1)
+    tt2[column_name] = result1.round(2)
+    print(tt2.to_string(index=False))
+
+
+# Create conditional table
+trans_table = transitions(states = truthtable(len(list(file))), matrix = file)
+
+random.seed(0)
 
 print("")
 print("Steady State Probability")
